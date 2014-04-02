@@ -1,0 +1,25 @@
+{
+  "name": "backboneNamedRoutes",
+  "version": "0.5.0",
+  "homepage": "https://github.com/dbrekalo/backbone-named-routes",
+  "authors": [
+    "Damir Brekalo <dbrekalo@gmail.com>"
+  ],
+  "description": "Backbone router implementation with named routes (aliases) for easy client side links generation",
+  "main": "dist/router.min.js",
+  "keywords": [
+    "Backbone",
+    "router",
+    "named",
+    "routes",
+    "aliases"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
