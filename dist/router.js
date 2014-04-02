@@ -1,4 +1,4 @@
-;(function($, Backbone){
+;(function($, Backbone, _){
 
 	"use strict";
 
@@ -90,4 +90,4 @@
 	$.wk = $.wk || {};
 	$.wk.router = api;
 
-})(jQuery || Zepto, Backbone);
+})(window.jQuery || window.Zepto, window.Backbone, window._);
