@@ -6,8 +6,23 @@
 		routeDefinitions = { routes: {} },
 		routerOptions = { pushState: false, root: "" },
 		aliases = {},
+		baseUrl = window.location.protocol + '//' + window.location.host,
 		routeRe = /\((.*?)\)|(\(\?)?:\w+|\*\w+/,
-		slice = Array.prototype.slice;
+		slice = Array.prototype.slice,
+		removeTrailingSlash = function(str){
+
+			removeTrailingSlash.cache = removeTrailingSlash.cache || {};
+
+			var cachedStr = removeTrailingSlash.cache[str];
+			if (typeof cachedStr !== 'undefined') { return cachedStr; }
+
+			if(str.length && str.substring(str.length-1) === '/'){
+				cachedStr = str.substring(0,str.length-1);
+			} else {
+				cachedStr = str;
+			}
+			return cachedStr;
+		};
 
 	var api = {
 
@@ -37,6 +52,7 @@
 			var params = slice.call(arguments, 1),
 				routeString = aliases[alias];
 
+			// apply params if there are any
 			if (params.length) {
 
 				_.each(params, function(param){
@@ -47,7 +63,18 @@
 
 			}
 
-			return routerOptions.root + routeString;
+			// root url
+			if (!routeString.length ) {
+				return baseUrl + removeTrailingSlash(routerOptions.root);
+			}
+
+			// hashed urls
+			if (!routerOptions.pushState) {
+				return baseUrl + removeTrailingSlash(routerOptions.root) + '#' + routeString;
+			}
+
+			// push state urls
+			return baseUrl + routerOptions.root + routeString;
 
 		},
 
