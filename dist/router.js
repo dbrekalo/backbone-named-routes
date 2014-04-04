@@ -93,10 +93,13 @@
 
 		navigateToLink: function(link, noTrigger){
 
-			var location = link instanceof $ ? link.attr('href') : link;
+			var location = link instanceof $ ? link.attr('href') : link,
+				root = removeTrailingSlash(routerOptions.root);
 
 			if (startsWith(location, baseUrl)) { location = location.replace(baseUrl, ""); }
-			if (startsWith(location, routerOptions.root)) { location = location.replace(routerOptions.root, ""); }
+			if (startsWith(location, root)) { location = location.replace(root, ""); }
+			if (startsWith(location, '/')) { location = location.slice(1); }
+			if (!routerOptions.pushState && startsWith(location, '#') ) { location = location.slice(1); }
 
 			router.navigate(location, {trigger:!noTrigger});
 
