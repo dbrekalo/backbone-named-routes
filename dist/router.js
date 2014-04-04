@@ -8,7 +8,6 @@
 		aliases = {},
 		baseUrl = window.location.protocol + '//' + window.location.host,
 		routeRe = /\((.*?)\)|(\(\?)?:\w+|\*\w+/,
-		slice = Array.prototype.slice,
 		removeTrailingSlash = function(str){
 
 			removeTrailingSlash.cache = removeTrailingSlash.cache || {};
@@ -22,6 +21,9 @@
 				cachedStr = str;
 			}
 			return cachedStr;
+		},
+		startsWith = function(fullString, startString){
+			return fullString.slice(0, startString.length) === startString;
 		};
 
 	var api = {
@@ -47,13 +49,12 @@
 
 		},
 
-		get: function(alias){
+		get: function(alias, params){
 
-			var params = slice.call(arguments, 1),
-				routeString = aliases[alias];
+			var routeString = aliases[alias];
 
 			// apply params if there are any
-			if (params.length) {
+			if (params && params.length) {
 
 				_.each(params, function(param){
 					if(!_.isObject(param)){
@@ -84,12 +85,20 @@
 
 		},
 
-		navigateToAlias: function(){
+		navigateToAlias: function(alias, params, noTrigger){
 
-			var routeUrl = api.get.apply(api, arguments).substring(routerOptions.root.length),
-				navigateOptionsCandidate = slice.call(arguments,0).pop();
+			api.navigateToLink(api.get(alias, params), noTrigger );
 
-			_.isObject(navigateOptionsCandidate) ? api.navigate(routeUrl, navigateOptionsCandidate) : api.navigate(routeUrl);
+		},
+
+		navigateToLink: function(link, noTrigger){
+
+			var location = link instanceof $ ? link.attr('href') : link;
+
+			if (startsWith(location, baseUrl)) { location = location.replace(baseUrl, ""); }
+			if (startsWith(location, routerOptions.root)) { location = location.replace(routerOptions.root, ""); }
+
+			router.navigate(location, {trigger:!noTrigger});
 
 		},
 
