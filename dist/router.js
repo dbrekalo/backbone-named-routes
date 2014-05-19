@@ -8,23 +8,11 @@
 		aliases = {},
 		baseUrl = window.location.protocol + '//' + window.location.host,
 		routeRe = /\((.*?)\)|(\(\?)?:\w+|\*\w+/,
-		removeTrailingSlash = function(str){
-
-			removeTrailingSlash.cache = removeTrailingSlash.cache || {};
-
-			var cachedStr = removeTrailingSlash.cache[str];
-			if (typeof cachedStr !== 'undefined') { return cachedStr; }
-
-			if(str.length && str.substring(str.length-1) === '/'){
-				cachedStr = str.substring(0,str.length-1);
-			} else {
-				cachedStr = str;
-			}
-			return cachedStr;
-		},
-		startsWith = function(fullString, startString){
+		routeOptionalRe = /\((.*?)\)/g,
+		removeTrailingSlash =  _.memoize(function(str){ return str.replace(/\/$/, ""); }),
+		startsWith = _.memoize(function(fullString, startString){
 			return fullString.slice(0, startString.length) === startString;
-		};
+		});
 
 	var api = {
 
@@ -53,6 +41,10 @@
 
 			var routeString = aliases[alias];
 
+			if (params && !_.isArray(params)){
+				params = _.toArray(arguments).slice(1);
+			}
+
 			// apply params if there are any
 			if (params && params.length) {
 
@@ -63,6 +55,8 @@
 				});
 
 			}
+
+			routeString = routeString.replace(routeOptionalRe, "");
 
 			// root url
 			if (!routeString.length ) {
@@ -122,6 +116,17 @@
 			routerOptions = $.extend(routerOptions, params);
 			return api;
 
+		},
+
+		setBaseUrl: function(url){
+
+			baseUrl = url;
+			return api;
+
+		},
+
+		getOriginalRouter: function(){
+			return router;
 		}
 
 	};
