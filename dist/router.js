@@ -7,12 +7,21 @@
 		routerOptions = { pushState: false, root: "" },
 		aliases = {},
 		baseUrl = window.location.protocol + '//' + window.location.host,
-		routeRe = /\((.*?)\)|(\(\?)?:\w+|\*\w+/,
+
+		routeRe = /\((.*?)\)|(\(\?)?:\w+|\*\w+/g,
 		routeOptionalRe = /\((.*?)\)/g,
-		removeTrailingSlash =  _.memoize(function(str){ return str.replace(/\/$/, ""); }),
+
+		removeTrailingSlash =  _.memoize(function(str){
+			return str.replace(/\/$/, "");
+		}),
+
 		startsWith = _.memoize(function(fullString, startString){
 			return fullString.slice(0, startString.length) === startString;
-		});
+		}, function(a,b){ return a + ':' + b; }),
+
+		getRouteHasher = function(alias, params){
+			return alias + (params ? (_.isArray(params) ? ':' + params.join(":") : ':' + _.toArray(arguments).slice(1).join(":") ) : '');
+		};
 
 	var api = {
 
@@ -37,22 +46,20 @@
 
 		},
 
-		get: function(alias, params){
+		get: _.memoize(function(alias, params){
 
 			var routeString = aliases[alias];
 
-			if (params && !_.isArray(params)){
-				params = _.toArray(arguments).slice(1);
-			}
+			if (params){
 
-			// apply params if there are any
-			if (params && params.length) {
+				// normalize parameters
+				!_.isArray(params) && (params = _.toArray(arguments).slice(1));
 
-				_.each(params, function(param){
-					if(!_.isObject(param)){
-						routeString = routeString.replace(routeRe, param);
-					}
-				});
+				// apply params if there are any
+				params.length && (routeString = routeString.replace(routeRe, function(match){
+					var param = params.shift();
+					return param ? (startsWith(match, '(/') ? '/' + param : param) : '';
+				}));
 
 			}
 
@@ -71,7 +78,7 @@
 			// push state urls
 			return baseUrl + routerOptions.root + routeString;
 
-		},
+		}, getRouteHasher),
 
 		navigate: function(){
 
