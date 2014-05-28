@@ -86,13 +86,13 @@
 
 		},
 
-		navigateToAlias: function(alias, params, noTrigger){
+		navigateToAlias: function(alias, params, trigger){
 
-			api.navigateToLink(api.get(alias, params), noTrigger );
+			api.navigateToLink(api.get(alias, params), trigger);
 
 		},
 
-		navigateToLink: function(link, noTrigger){
+		navigateToLink: function(link, trigger){
 
 			var location = link instanceof $ ? link.attr('href') : link,
 				root = removeTrailingSlash(routerOptions.root);
@@ -102,7 +102,7 @@
 			if (startsWith(location, '/')) { location = location.slice(1); }
 			if (!routerOptions.pushState && startsWith(location, '#') ) { location = location.slice(1); }
 
-			router.navigate(location, {trigger:!noTrigger});
+			router.navigate(location, {'trigger': !!trigger });
 
 		},
 
