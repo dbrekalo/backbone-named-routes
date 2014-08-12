@@ -10,6 +10,8 @@
 
 		routeRe = /\((.*?)\)|(\(\?)?:\w+|\*\w+/g,
 		routeOptionalRe = /\((.*?)\)/g,
+		routeParamRe = /\:\w+/,
+		routeParenthesisRe = /\(|\)/g,
 
 		removeTrailingSlash =  _.memoize(function(str){
 			return str.replace(/\/$/, "");
@@ -50,18 +52,16 @@
 
 			var routeString = aliases[alias];
 
-			if (params){
+			!_.isArray(params) && (params = _.toArray(arguments).slice(1));
 
-				// normalize parameters
-				!_.isArray(params) && (params = _.toArray(arguments).slice(1));
+			params.length && (routeString = routeString.replace(routeRe, function(match){
 
-				// apply params if there are any
-				params.length && (routeString = routeString.replace(routeRe, function(match){
-					var param = params.shift();
-					return param ? (startsWith(match, '(/') ? '/' + param : param) : '';
-				}));
+				var param = params.shift();
+				if (!param) { return ''; }
+				if (!startsWith(match, '(')){ return param; }
+				return match.replace(routeParamRe, param).replace(routeParenthesisRe, '');
 
-			}
+			}));
 
 			routeString = routeString.replace(routeOptionalRe, "");
 
@@ -134,6 +134,20 @@
 
 		getOriginalRouter: function(){
 			return router;
+		},
+
+		getQueryParam: function(name){
+
+			var queryString = window.location.search;
+
+			if (!queryString) { return; }
+
+			var params = _.object(_.map(queryString.substring(1).split("&"), function(value){
+				return value.split("=");
+			}));
+
+			return name ? params[name] : params;
+
 		}
 
 	};
