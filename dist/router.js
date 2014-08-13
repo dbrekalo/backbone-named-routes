@@ -80,6 +80,17 @@
 
 		}, getRouteHasher),
 
+		getWithQueryString: function(alias, params, queryParams){
+
+			if (arguments.length === 2) {
+				queryParams = params;
+				params = [];
+			}
+
+			return api.get(alias, params) + '?' + $.param(queryParams);
+
+		},
+
 		navigate: function(){
 
 			router.navigate.apply(router, arguments);
