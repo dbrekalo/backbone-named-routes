@@ -5,178 +5,133 @@
     } else if (typeof module === 'object' && module.exports) {
         module.exports = factory(require('jquery'), require('backbone'), require('underscore'));
     } else {
-        root.BaseView = factory(root.jQuery, root.Backbone, root._);
+        root.BackboneNamedRouter = factory(root.jQuery, root.Backbone, root._);
     }
 
 }(this, function($, Backbone, _) {
 
-    var root = this,
-        router,
-        routeDefinitions = {
-            routes: {}
-        },
-        routerOptions = {
-            pushState: false,
-            root: ''
-        },
-        aliases = {},
-        baseUrl = root.location.protocol + '//' + root.location.host,
+    var win = this,
 
         routeRe = /\((.*?)\)|(\(\?)?:\w+|\*\w+/g,
         routeOptionalRe = /\((.*?)\)/g,
         routeParamRe = /\:\w+/,
         routeParenthesisRe = /\(|\)/g,
+        paramKeyRe = /\:\w+|\*\w+/,
 
-        removeTrailingSlash =  _.memoize(function(str) {
-            return str.replace(/\/$/, '');
-        }),
+        trailingSlashRE = /\/$/,
 
-        startsWith = _.memoize(function(fullString, startString) {
-            return fullString.slice(0, startString.length) === startString;
-        }, function(a, b) { return a + ':' + b; }),
+        removeTrailingSlash = function(str) {
+            return str.replace(trailingSlashRE, '');
+        },
 
-        getRouteHasher = function(alias, params) {
-            return alias + (params ? (_.isArray(params) ? ':' + params.join(':') : ':' + _.toArray(arguments).slice(1).join(':')) : '');
+        startsWith = function(str, search) {
+            return str.substr(0, search.length) === search;
         };
 
-    var api = {
+    var Router = Backbone.Router.extend({
 
-        register: function(route, alias, action) {
+        constructor: function(options) {
 
-            if (typeof route === 'string') { // full register api call
+            this.options = _.extend({
+                baseUrl: win.location.protocol + '//' + win.location.host
+            }, options);
 
-                routeDefinitions.routes[route] = alias;
-                routeDefinitions[alias] = action;
-                aliases[alias] = route;
+            Backbone.Router.apply(this, arguments);
 
-            } else { // shorthand - classic backbone route definition object
+        },
 
-                routeDefinitions = route;
-                _.each(routeDefinitions.routes, function(alias, routeString) {
-                    aliases[alias] = routeString;
+        route: function(route, name, callback) {
+
+            this.namedRoutes = this.namedRoutes || {};
+            this.namedRoutes[name] = route;
+
+            Backbone.Router.prototype.route.apply(this, arguments);
+
+        },
+
+        get: function(routeName, routeParams, queryParams) {
+
+            var routeString = this.namedRoutes[routeName],
+                baseUrl = this.options.baseUrl,
+                pushState = Backbone.history._usePushState,
+                root = Backbone.history.root,
+                url = '';
+
+            if (typeof routeString === 'undefined') {
+                throw new Error('Route "' + routeName + '" is not defined');
+            }
+
+            if (!routeString.length) {
+
+                url = baseUrl + removeTrailingSlash(root);
+
+            } else {
+
+                routeString = routeString.replace(routeRe, function(foundMatch) {
+
+                    var paramKey = foundMatch.match(paramKeyRe)[0].slice(1),
+                        routeParam = routeParams[paramKey],
+                        routeParamDefined = typeof routeParam !== 'undefined';
+
+                    if (foundMatch.match(routeOptionalRe)) {
+
+                        if (routeParamDefined) {
+                            return foundMatch.replace(routeParenthesisRe, '').replace(routeParamRe, routeParam);
+                        } else {
+                            return '';
+                        }
+
+                    } else {
+
+                        if (!routeParamDefined) {
+                            throw new Error('Required route parameter "' + paramKey + '" for route "' + routeName + '" is missing');
+                        } else {
+                            return routeParam;
+                        }
+
+                    }
+
                 });
 
+                if (pushState) {
+                    url = baseUrl + root + routeString;
+                } else {
+                    url = baseUrl + removeTrailingSlash(root) + '#' + routeString;
+                }
             }
 
-            return api;
-
-        },
-
-        get: _.memoize(function(alias, params) {
-
-            var routeString = aliases[alias];
-
-            !_.isArray(params) && (params = _.toArray(arguments).slice(1));
-
-            params.length && (routeString = routeString.replace(routeRe, function(match) {
-
-                var param = params.shift();
-                if (!param) { return ''; }
-                if (!startsWith(match, '(')) { return param; }
-                return match.replace(routeParamRe, param).replace(routeParenthesisRe, '');
-
-            }));
-
-            routeString = routeString.replace(routeOptionalRe, '');
-
-            // root url
-            if (!routeString.length) {
-                return baseUrl + removeTrailingSlash(routerOptions.root);
+            if (queryParams) {
+                url += '?' + $.param(queryParams);
             }
 
-            // hashed urls
-            if (!routerOptions.pushState) {
-                return baseUrl + removeTrailingSlash(routerOptions.root) + '#' + routeString;
-            }
-
-            // push state urls
-            return baseUrl + routerOptions.root + routeString;
-
-        }, getRouteHasher),
-
-        getWithQueryString: function(alias, params, queryParams) {
-
-            if (arguments.length === 2) {
-                queryParams = params;
-                params = [];
-            }
-
-            return api.get(alias, params) + '?' + $.param(queryParams);
+            return url;
 
         },
 
-        navigate: function() {
+        navigateToUrl: function(url, trigger) {
 
-            router.navigate.apply(router, arguments);
+            var fragment = url instanceof $ ? url.attr('href') : url,
+                baseUrl = this.options.baseUrl,
+                pushState = Backbone.history._usePushState,
+                root = removeTrailingSlash(Backbone.history.root);
 
-        },
+            if (startsWith(fragment, baseUrl)) { fragment = fragment.replace(baseUrl, ''); }
+            if (startsWith(fragment, root)) { fragment = fragment.replace(root, ''); }
+            if (startsWith(fragment, '/')) { fragment = fragment.slice(1); }
+            if (!pushState && startsWith(fragment, '#')) { fragment = fragment.slice(1); }
 
-        navigateToAlias: function(alias, params, trigger) {
-
-            api.navigateToLink(api.get(alias, params), trigger);
-
-        },
-
-        navigateToLink: function(link, trigger) {
-
-            var location = link instanceof $ ? link.attr('href') : link,
-                root = removeTrailingSlash(routerOptions.root);
-
-            if (startsWith(location, baseUrl)) { location = location.replace(baseUrl, ''); }
-            if (startsWith(location, root)) { location = location.replace(root, ''); }
-            if (startsWith(location, '/')) { location = location.slice(1); }
-            if (!routerOptions.pushState && startsWith(location, '#')) { location = location.slice(1); }
-
-            router.navigate(location, {'trigger': !!trigger });
+            this.navigate(fragment, {trigger: !!trigger });
 
         },
 
-        start: function(params) {
+        navigateToRoute: function(routeName, routeParams, queryParams, trigger) {
 
-            var RouterBlueprint = Backbone.Router.extend(routeDefinitions);
-            router = new RouterBlueprint();
-
-            if (params) { api.setOptions(params); }
-            Backbone.history.start(routerOptions);
-
-            return api;
-
-        },
-
-        setOptions: function(params) {
-
-            routerOptions = $.extend(routerOptions, params);
-            return api;
-
-        },
-
-        setBaseUrl: function(url) {
-
-            baseUrl = url;
-            return api;
-
-        },
-
-        getOriginalRouter: function() {
-            return router;
-        },
-
-        getQueryParam: function(name) {
-
-            var queryString = root.location.search;
-
-            if (!queryString) { return; }
-
-            var params = _.object(_.map(queryString.substring(1).split('&'), function(value) {
-                return value.split('=');
-            }));
-
-            return name ? params[name] : params;
+            this.navigateToUrl(this.get(routeName, routeParams, queryParams), trigger);
 
         }
 
-    };
+    });
 
-    return api;
+    return Router;
 
 }));

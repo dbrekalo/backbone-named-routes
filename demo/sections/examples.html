@@ -1,0 +1,62 @@
+<section class="attireBlock mod1 testCase">
+    <div class="inner">
+
+        <h2 class="attireTitleType2">Examples</h2>
+
+        <script type="text/javascript">
+
+            var Router = BackboneNamedRouter.extend({
+                routes: {
+                    '': 'homepage',
+                    'simple-route': 'simpleRoute',
+                    'params-route/:id': 'paramsRoute',
+                    'complex-route/:name(/pakt-:id)': 'complexRoute',
+                    'splat-route/*path': 'splatRoute'
+                },
+                homepage: function() {
+                    console.log('on homepage');
+                },
+                simpleRoute: function() {
+                    console.log('on simple route');
+                },
+                paramsRoute: function(id) {
+                    console.log('on params route', id);
+                },
+                complexRoute: function(name, id) {
+                    console.log('on complex route',name, id);
+                },
+                splatRoute: function(splat) {
+                    console.log('on splat route', splat);
+                }
+            });
+
+            var router = new Router();
+            Backbone.history.start({
+                pushState: true,
+                root: '/opensource/backboneNamedRoutes/'
+            });
+
+            console.time('start');
+            console.log(router.get('homepage'));
+            console.log(router.get('simpleRoute'));
+            console.log(router.get('paramsRoute', {id: 44}));
+            console.log(router.get('complexRoute', {name:'kita', id: 21}));
+            console.log(router.get('complexRoute', {name:'kita'}));
+            console.log(router.get('splatRoute', {path:'pero/bero'}, {peso: 'bleso'}));
+            console.timeEnd('start');
+
+            // setTimeout(function() {
+            //     router.navigate('simple-route', {trigger: true});
+            // },1000);
+            // setTimeout(function() {
+            //     router.navigate('params-route/45', {trigger: true});
+            // },5000);
+
+        </script>
+
+        <p class="attireTextType2">
+            Are coming soon...
+        </p>
+
+    </div>
+</section>
