@@ -10,9 +10,7 @@
 
 }(this, function($, Backbone, _) {
 
-    var win = this,
-
-        routeRe = /\((.*?)\)|(\(\?)?:\w+|\*\w+/g,
+    var routeRe = /\((.*?)\)|(\(\?)?:\w+|\*\w+/g,
         routeOptionalRe = /\((.*?)\)/g,
         routeParamRe = /\:\w+/,
         routeParenthesisRe = /\(|\)/g,
@@ -21,7 +19,7 @@
         trailingSlashRE = /\/$/,
 
         removeTrailingSlash = function(str) {
-            return str.replace(trailingSlashRE, '');
+            return str ? str.replace(trailingSlashRE, '') : '';
         },
 
         startsWith = function(str, search) {
@@ -33,7 +31,7 @@
         constructor: function(options) {
 
             this.options = _.extend({
-                baseUrl: win.location.protocol + '//' + win.location.host
+                baseUrl: typeof window !== 'undefined' ? (window.location.protocol + '//' + window.location.host) : ''
             }, options);
 
             Backbone.Router.apply(this, arguments);
@@ -61,7 +59,7 @@
                 throw new Error('Route "' + routeName + '" is not defined');
             }
 
-            if (!routeString.length) {
+            if (routeString.length === 0) {
 
                 url = baseUrl + removeTrailingSlash(root);
 
@@ -98,6 +96,7 @@
                 } else {
                     url = baseUrl + removeTrailingSlash(root) + '#' + routeString;
                 }
+
             }
 
             if (queryParams) {
