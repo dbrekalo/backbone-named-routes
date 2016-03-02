@@ -47,7 +47,7 @@
 
         },
 
-        get: function(routeName, routeParams, queryParams) {
+        url: function(routeName, routeParams, queryParams) {
 
             var routeString = this.namedRoutes[routeName],
                 baseUrl = this.options.baseUrl,
@@ -125,7 +125,7 @@
 
         navigateToRoute: function(routeName, routeParams, queryParams, trigger) {
 
-            this.navigateToUrl(this.get(routeName, routeParams, queryParams), trigger);
+            this.navigateToUrl(this.url(routeName, routeParams, queryParams), trigger);
 
         }
 
