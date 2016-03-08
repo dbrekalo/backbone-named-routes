@@ -119,7 +119,11 @@
             if (startsWith(fragment, '/')) { fragment = fragment.slice(1); }
             if (!pushState && startsWith(fragment, '#')) { fragment = fragment.slice(1); }
 
-            this.navigate(fragment, {trigger: !!trigger });
+            if (trigger && fragment === Backbone.history.fragment) {
+                Backbone.history.loadUrl(fragment);
+            } else {
+                this.navigate(fragment, {trigger: !!trigger });
+            }
 
         },
 
