@@ -1,6 +1,6 @@
 {
   "name": "backbone-named-routes",
-  "version": "2.0.0-alpha.5",
+  "version": "2.0.0-alpha.6",
   "description": "Backbone router implementation with named routes (aliases) for easy client side links generation",
   "main": "src/router.js",
   "license": "MIT",
@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "backbone": "^1.2.3",
-    "jquery": "^2.2.1",
+    "jquery": ">=1.11",
     "underscore": "^1.8.3"
   }
 }
