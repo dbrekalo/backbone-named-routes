@@ -1,6 +1,6 @@
 {
   "name": "backboneNamedRoutes",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "homepage": "https://github.com/dbrekalo/backbone-named-routes",
   "authors": [
     "Damir Brekalo <dbrekalo@gmail.com>"
