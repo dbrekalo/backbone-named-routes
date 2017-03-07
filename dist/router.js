@@ -1,5 +1,6 @@
 (function(root, factory) {
 
+    /* istanbul ignore next */
     if (typeof define === 'function' && define.amd) {
         define(['jquery', 'backbone', 'underscore'], factory);
     } else if (typeof module === 'object' && module.exports) {
@@ -31,10 +32,21 @@
         constructor: function(options) {
 
             this.options = _.extend({
-                baseUrl: typeof window !== 'undefined' ? (window.location.protocol + '//' + window.location.host) : ''
+                baseUrl: typeof window !== 'undefined' ? (window.location.protocol + '//' + window.location.host) : '',
+                usesPushState: false,
+                root: ''
             }, options);
 
             Backbone.Router.apply(this, arguments);
+
+        },
+
+        getHistoryStartParams: function(additionalParams) {
+
+            return _.extend({
+                pushState: this.options.usesPushState,
+                root: this.options.root
+            }, additionalParams);
 
         },
 
@@ -51,8 +63,8 @@
 
             var routeString = this.namedRoutes[routeName],
                 baseUrl = this.options.baseUrl,
-                pushState = Backbone.history._usePushState,
-                root = Backbone.history.root,
+                pushState = this.options.usesPushState,
+                root = this.options.root,
                 url = '';
 
             if (typeof routeString === 'undefined') {
@@ -111,8 +123,8 @@
 
             var fragment = url instanceof $ ? url.attr('href') : url,
                 baseUrl = this.options.baseUrl,
-                pushState = Backbone.history._usePushState,
-                root = removeTrailingSlash(Backbone.history.root);
+                pushState = this.options.usesPushState,
+                root = removeTrailingSlash(this.options.root);
 
             if (startsWith(fragment, baseUrl)) { fragment = fragment.replace(baseUrl, ''); }
             if (startsWith(fragment, root)) { fragment = fragment.replace(root, ''); }
@@ -122,7 +134,7 @@
             if (trigger && fragment === Backbone.history.fragment) {
                 Backbone.history.loadUrl(fragment);
             } else {
-                this.navigate(fragment, {trigger: !!trigger });
+                this.navigate(fragment, {trigger: Boolean(trigger)});
             }
 
         },

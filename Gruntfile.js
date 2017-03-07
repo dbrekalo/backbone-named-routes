@@ -1,10 +1,6 @@
-/* jshint node: true */
 module.exports = function(grunt) {
 
     grunt.initConfig({
-
-        npmPackage: grunt.file.readJSON('package.json'),
-        bowerPackage: grunt.file.readJSON('bower.json'),
 
         uglify: {
             min: {
@@ -14,10 +10,7 @@ module.exports = function(grunt) {
                     src: '**/*.js',
                     dest: 'dist',
                     ext: '.min.js'
-                }],
-                options: {
-
-                }
+                }]
             }
         },
 
@@ -32,53 +25,18 @@ module.exports = function(grunt) {
             }
         },
 
-        jshint: {
+        eslint: {
             options: {
-                'jshintrc': '.jshintrc'
+                configFile: '.eslintrc.js'
             },
-            all: ['src', 'Gruntfile.js']
-        },
-
-        jscs: {
-            options: {
-                config: '.jscsrc'
-            },
-            scripts: {
-                files: {
-                    src: ['src/**/*.js', 'Gruntfile.js']
-                }
-            }
-        },
-
-        includereplace: {
-            dist: {
-                options: {
-                    globals: {
-                        repositoryUrl: '<%= npmPackage.repository.url %>',
-                        npmRepositoryName: '<%= npmPackage.name %>',
-                        bowerRepositoryName: '<%= bowerPackage.name %>'
-                    },
-                    prefix: '{{ ',
-                    suffix: ' }}'
-                },
-                src: 'demo/index.html',
-                dest: 'index.html'
-            }
+            target: ['src/**/*.js', 'Gruntfile.js', 'test/index.js']
         },
 
         watch: {
             jsFiles: {
                 expand: true,
-                files: ['src/**/*.js', 'Gruntfile.js'],
-                tasks: ['jshint', 'jscs', 'copy', 'uglify'],
-                options: {
-                    spawn: false
-                }
-            },
-            demoFiles: {
-                expand: true,
-                files: ['demo/**/*.html'],
-                tasks: ['includereplace'],
+                files: ['src/**/*.js'],
+                tasks: ['eslint', 'uglify', 'copy'],
                 options: {
                     spawn: false
                 }
@@ -98,7 +56,7 @@ module.exports = function(grunt) {
 
     require('load-grunt-tasks')(grunt);
 
-    grunt.registerTask('default', ['watch']);
-    grunt.registerTask('build', ['jshint', 'jscs', 'uglify', 'copy', 'includereplace']);
+    grunt.registerTask('default', ['build', 'watch']);
+    grunt.registerTask('build', ['eslint', 'uglify', 'copy']);
 
 };
